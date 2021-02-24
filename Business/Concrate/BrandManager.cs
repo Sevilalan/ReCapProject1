@@ -1,4 +1,6 @@
 ﻿using Business.Abstract;
+using Business.Constants;
+using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrate;
 using System;
@@ -16,48 +18,50 @@ namespace Business.Concrate
             _brandDal = brandDal;
         }
 
-        public void Add(Brand brand)
+        public IResult Add(Brand brand)
         {
-            if (brand.BrandName.Length > 2)
+            if (brand.BrandName.Length < 2)
             {
-                _brandDal.Add(brand);
-                Console.WriteLine("Marka başarıyla eklendi.");
+                return new ErrorResult(Messages.CarDailyPriceInvalid);
             }
-            else
-            {
-                Console.WriteLine($"Lütfen marka isminin uzunluğunu 2 karakterden fazla giriniz. Girdiğiniz marka ismi : {brand.BrandName}");
-            }
+
+            _brandDal.Add(brand);
+            return new SuccessResult(Messages.BrandAdded);
         }
 
-        public void Delete(Brand brand)
+        public IResult Delete(Brand brand)
         {
             _brandDal.Delete(brand);
-            Console.WriteLine("Marka başarıyla silindi.");
+            return new SuccessResult((Messages.CarDeleted));
 
         }
 
-        public List<Brand> GetAll()
+        public IDataResult<List<Brand>> GetAll()
         {
-            return _brandDal.GetAll();
-        }
-
-        public Brand GetById(int id)
-        {
-            return _brandDal.Get(c => c.BrandId == id);
-        }
-
-        public void Update(Brand brand)
-        {
-            if (brand.BrandName.Length >= 2)
+            if (DateTime.Now.Hour == 1)
             {
-                _brandDal.Update(brand);
-                Console.WriteLine("Marka başarıyla Güncellendi.");
+                return new ErrorDataResult<List<Brand>>(Messages.MaintenanceTime);
+            }
+            return new SuccessDataResult<List<Brand>>(_brandDal.GetAll(), Messages.BrandListed);
+        }
+
+        public  IDataResult< Brand> GetById(int id)
+        {
+            return new SuccessDataResult<Brand>(_brandDal.Get(b =>b.BrandId  == id), Messages.CarDailyPriceInvalid);
+        }
+
+        public IResult Update(Brand brand)
+        {
+            if (brand.BrandName.Length> 0)
+            {
+                return new ErrorResult(Messages.CarDailyPriceInvalid);
+
             }
             else
             {
-                Console.WriteLine($"Lütfen marka isminin uzunluğunu 1 karakterden fazla giriniz. Girdiğiniz marka ismi : {brand.BrandName}");
+                _brandDal.Update(brand);
+                return new SuccessResult(Messages.BrandUpdated);
             }
-
         }
     }
 }
